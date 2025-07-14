@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - master
-
-  workflow_dispatch:  # ✅ Enables manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,16 +21,15 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Authenticate with Service Account  # ✅ Fix for "no active account" error
+      - name: Authenticate with Service Account (raw JSON)
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > "${HOME}/gcp-key.json"
-          gcloud auth activate-service-account --key-file="${HOME}/gcp-key.json"
+          echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
+          gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy to App Engine
-        run: |
-          gcloud app deploy --quiet
-        working-directory: ./app  # ✅ points to the correct folder
+        run: gcloud app deploy --quiet
+        working-directory: ./app
 
       - name: Publish Pub/Sub Message
         run: |
@@ -43,9 +41,3 @@ jobs:
           gcloud functions deploy notify_slack \
             --runtime python310 \
             --trigger-topic app-deploy-topic \
-            --entry-point notify_slack \
-            --region us-central1 \
-            --gen2 \
-            --set-env-vars SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} \
-            --quiet
-        working-directory: ./cloud-function

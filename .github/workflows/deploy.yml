@@ -3,9 +3,9 @@ name: Deploy to App Engine and Notify Slack
 on:
   push:
     branches:
-      - main
+      - master
 
-  workflow_dispatch:  # ✅ Enables manual trigger via GitHub UI
+  workflow_dispatch:  # ✅ Manual trigger
 
 jobs:
   deploy:
@@ -24,9 +24,8 @@ jobs:
 
       - name: Deploy to App Engine
         run: |
-          
           gcloud app deploy --quiet
-        working-directory: ./app
+        working-directory: ./app  # ✅ Correct path
 
       - name: Publish Pub/Sub Message
         run: |
@@ -35,7 +34,6 @@ jobs:
 
       - name: Deploy Cloud Function (notify_slack)
         run: |
-          cd cloud-function
           gcloud functions deploy notify_slack \
             --runtime python310 \
             --trigger-topic app-deploy-topic \
@@ -44,3 +42,4 @@ jobs:
             --gen2 \
             --set-env-vars SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} \
             --quiet
+        working-directory: ./cloud-function  # ✅ Correct path

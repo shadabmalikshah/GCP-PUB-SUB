@@ -24,8 +24,21 @@ jobs:
         run: |
           cd app
           gcloud app deploy --quiet
+        working-directory: ./app
 
       - name: Publish Pub/Sub Message
         run: |
           gcloud pubsub topics publish app-deploy-topic \
-            --message="App Engine deployed successfully!"
+            --message="✅ App Engine deployed successfully via GitHub Actions!"
+
+      - name: Deploy Cloud Function (notify_slack)
+        run: |
+          cd cloud-function
+          gcloud functions deploy notify_slack \
+            --runtime python310 \
+            --trigger-topic app-deploy-topic \
+            --entry-point notify_slack \
+            --region us-central1 \
+            --gen2 \
+            --set-env-vars SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} \
+            --quiet

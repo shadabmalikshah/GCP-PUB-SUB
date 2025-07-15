@@ -19,11 +19,33 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Decode and save service account key
+      - name: Decode and authenticate service account key
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > "${HOME}/gcp-key.json"
           gcloud auth activate-service-account --key-file="${HOME}/gcp-key.json"
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure Required APIs Are Enabled
+        run: |
+          REQUIRED_APIS=(
+            appengine.googleapis.com
+            cloudbuild.googleapis.com
+            cloudfunctions.googleapis.com
+            pubsub.googleapis.com
+            run.googleapis.com
+            cloudresourcemanager.googleapis.com
+            iam.googleapis.com
+          )
+
+          for api in "${REQUIRED_APIS[@]}"; do
+            echo "🔍 Checking API: $api"
+            if gcloud services list --enabled --format="value(config.name)" | grep -q "$api"; then
+              echo "✅ $api is already enabled."
+            else
+              echo "⏳ Enabling $api..."
+              gcloud services enable "$api"
+            fi
+          done
 
       - name: Deploy to App Engine
         run: gcloud app deploy --quiet

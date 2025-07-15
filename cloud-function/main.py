@@ -17,3 +17,4 @@ def notify_slack(event, context):
 
     response = requests.post(SLACK_WEBHOOK_URL, json=payload)
     print("Slack response:", response.status_code)
+ 

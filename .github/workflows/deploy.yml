@@ -68,7 +68,7 @@ jobs:
               --gen2 \
               --set-env-vars SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} \
               --quiet && break || {
-                echo "⚠️ Deployment failed. Retrying in 60 seconds..."
+                echo " Deployment failed. Retrying in 60 seconds..."
                 sleep 60
               }
           done
